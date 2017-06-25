@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">EqualizerApp</string>
+    <string name="media_url">https://zaycevfm.cdnvideo.ru/ZaycevFM_pop_256.mp3</string>
 </resources>
