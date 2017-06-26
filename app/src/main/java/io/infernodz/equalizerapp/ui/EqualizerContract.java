@@ -4,6 +4,8 @@ package io.infernodz.equalizerapp.ui;
 import java.util.List;
 
 import io.infernodz.equalizerapp.data.entities.FrequencyBand;
+import io.infernodz.equalizerapp.data.entities.FrequencyBandLevelModel;
+import io.reactivex.Observable;
 
 public interface EqualizerContract {
 
@@ -35,11 +37,10 @@ public interface EqualizerContract {
         void createEqualizerControls();
 
         /**
-         *
-         * @param bandNumber band where the action event occurred
-         * @param level new gain level in decibels
+         * Add a data source from frequency band change level events and
+         * subscribe to its changes.
          */
-        void onFrequencyBandLevelChange(int bandNumber, int level);
+        void listenBandLevelChange(Observable<FrequencyBandLevelChangeEvent> bandEvents);
 
         void bindView(View view);
 
@@ -56,5 +57,7 @@ public interface EqualizerContract {
         void releasePlayer();
 
         void initializeFrequencyBandsUI(List<FrequencyBand> bands);
+
+        void showBandLevel(int bandNumber, int bandLevel);
     }
 }

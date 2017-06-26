@@ -3,18 +3,18 @@ package io.infernodz.equalizerapp.data.entities;
 public class FrequencyBandLevelModel {
 
     private int bandNumber;
-    private int currentBandLevel;
+    private int level;
 
-    public FrequencyBandLevelModel(int bandNumber, int currentBandLevel) {
+    public FrequencyBandLevelModel(int bandNumber, int level) {
         this.bandNumber = bandNumber;
-        this.currentBandLevel = currentBandLevel;
+        this.level = level;
     }
 
     public int getBandNumber() {
         return bandNumber;
     }
 
-    public int getCurrentBandLevel() {
-        return currentBandLevel;
+    public int getLevel() {
+        return level;
     }
 }

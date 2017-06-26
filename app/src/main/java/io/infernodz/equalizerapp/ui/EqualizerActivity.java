@@ -4,6 +4,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.LinearLayout;
@@ -31,6 +32,10 @@ import javax.inject.Inject;
 import io.infernodz.equalizerapp.EqualizerApplication;
 import io.infernodz.equalizerapp.R;
 import io.infernodz.equalizerapp.data.entities.FrequencyBand;
+import io.reactivex.Observable;
+import io.reactivex.ObservableEmitter;
+import io.reactivex.ObservableOnSubscribe;
+import io.reactivex.annotations.NonNull;
 
 
 public class EqualizerActivity extends AppCompatActivity
@@ -46,6 +51,9 @@ public class EqualizerActivity extends AppCompatActivity
     private static final String HERTZ_SYMBOL = "Hz";
     private static final String DECIBEL_SYMBOL = "dB";
     private static final String PLUS_SYMBOL = "+";
+
+    private static final int BAND_LEVEL_TEXTVIEW_POSITION = 2;
+    private static final int BAND_LEVEL_CONTROLLER_WRAPPER_POSITION = 1;
 
     /* Fields */
 
@@ -143,12 +151,12 @@ public class EqualizerActivity extends AppCompatActivity
 
             TextView bandFrequency = (TextView) bandRow.findViewById(R.id.band_frequency);
             TextView bandMinLevel = (TextView) bandRow.findViewById(R.id.band_min_level);
-            TextView bandMaxLevel = (TextView) bandRow.findViewById(R.id.band_max_level);
-            SeekBar bandLevelController = (SeekBar) bandRow.findViewById(R.id.band_level_controller);
+            TextView bandLevel = (TextView) bandRow.findViewById(R.id.band_level);
+            final SeekBar bandLevelController = (SeekBar) bandRow.findViewById(R.id.band_level_controller);
 
             bandFrequency.setText(convertFrequencyToString(frequencyBand.getFrequency()));
             bandMinLevel.setText(convertBandLevelToString(frequencyBand.getMinLevel()));
-            bandMaxLevel.setText(convertBandLevelToString(frequencyBand.getMaxLevel()));
+            bandLevel.setText(convertBandLevelToString(frequencyBand.getLevel()));
 
             // Соотносим значения band с seek bar
             seekBarValueOffset = MIN_SEEK_BAR_VALUE - frequencyBand.getMinLevel();
@@ -157,27 +165,59 @@ public class EqualizerActivity extends AppCompatActivity
             bandLevelController.setMax(maxSeekBarValue);
             bandLevelController.setProgress(seekBarProgressValue);
 
+
             final int bandNumber = frequencyBand.getBandNumber();
 
-            bandLevelController.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-                @Override
-                public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+            // Make observable source that will emit data every time when any action perfomed on seek bar
+            // Warning! Keep strong reference on seek bar.
+            final int bandId = frequencyBand.getBandNumber();
 
-                }
+            Observable<FrequencyBandLevelChangeEvent> bandEvents =
+                    Observable.create(new ObservableOnSubscribe<FrequencyBandLevelChangeEvent>() {
+                        @Override
+                        public void subscribe(@NonNull final ObservableEmitter<FrequencyBandLevelChangeEvent> e) throws Exception {
+                            SeekBar.OnSeekBarChangeListener listener = new SeekBar.OnSeekBarChangeListener() {
+                                @Override
+                                public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
 
-                @Override
-                public void onStartTrackingTouch(SeekBar seekBar) {
+                                }
 
-                }
+                                @Override
+                                public void onStartTrackingTouch(SeekBar seekBar) {
 
-                @Override
-                public void onStopTrackingTouch(SeekBar seekBar) {
-                    presenter.onFrequencyBandLevelChange(bandNumber,
-                            getValueWithOffset(seekBar.getProgress(), -seekBarValueOffset));
-                }
-            });
+                                }
+
+                                @Override
+                                public void onStopTrackingTouch(SeekBar seekBar) {
+                                    FrequencyBandLevelChangeEvent event = new FrequencyBandLevelChangeEvent(bandNumber,
+                                            getValueWithOffset(seekBar.getProgress(), -seekBarValueOffset)); // Отрицательный offset для обратной ковертации
+                                    // Emit data only wehn subscribed
+                                    if (!e.isDisposed()) {
+                                        e.onNext(event);
+                                    }
+                                }
+                            };
+                            bandLevelController.setOnSeekBarChangeListener(listener);
+
+                            // Освобождаем ссылку, если от источника отписались
+                            if (e.isDisposed()) {
+                                bandLevelController.setOnSeekBarChangeListener(null);
+                            }
+                        }
+                    });
+
+            presenter.listenBandLevelChange(bandEvents);
+
             equalizerBandsWrapper.addView(bandRow);
         }
+    }
+
+    @Override
+    public void showBandLevel(int bandNumber, int bandLevel) {
+        LinearLayout bandRow = (LinearLayout) equalizerBandsWrapper.getChildAt(bandNumber);
+        LinearLayout bandLevelControllerWrapper = (LinearLayout) bandRow.getChildAt(BAND_LEVEL_CONTROLLER_WRAPPER_POSITION);
+        TextView bandLevelTextView = (TextView) bandLevelControllerWrapper.getChildAt(BAND_LEVEL_TEXTVIEW_POSITION);
+        bandLevelTextView.setText(convertBandLevelToString(bandLevel));
     }
 
     /* Private helper methods */

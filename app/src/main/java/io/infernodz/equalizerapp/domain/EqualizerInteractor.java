@@ -6,10 +6,17 @@ import java.util.List;
 import io.infernodz.equalizerapp.data.entities.FrequencyBand;
 import io.infernodz.equalizerapp.data.entities.FrequencyBandLevelModel;
 import io.infernodz.equalizerapp.data.IEqualizerModel;
+import io.infernodz.equalizerapp.ui.FrequencyBandLevelChangeEvent;
+import io.reactivex.Observable;
+import io.reactivex.ObservableEmitter;
+import io.reactivex.ObservableOnSubscribe;
+import io.reactivex.ObservableSource;
+import io.reactivex.Observer;
 import io.reactivex.Single;
 import io.reactivex.SingleEmitter;
 import io.reactivex.SingleOnSubscribe;
 import io.reactivex.annotations.NonNull;
+import io.reactivex.functions.Function;
 
 public class EqualizerInteractor implements IEqualizerInteractor {
 
@@ -32,6 +39,7 @@ public class EqualizerInteractor implements IEqualizerInteractor {
                     int frequency = equalizerModel.getBandCenterFrequency(bandNumber);
                     int minLevel = equalizerModel.getMinBandLevel();
                     int maxLevel = equalizerModel.getMaxBandLevel();
+
                     FrequencyBand band = new FrequencyBand(bandNumber, bandLevel, frequency, minLevel, maxLevel);
                     bands.add(band);
                 }
@@ -41,17 +49,29 @@ public class EqualizerInteractor implements IEqualizerInteractor {
     }
 
     @Override
-    public Single<FrequencyBandLevelModel> updateFrequencyBandLevel(final int bandNumber, final int level) {
-        return Single.create(new SingleOnSubscribe<FrequencyBandLevelModel>() {
-            @Override
-            public void subscribe(@NonNull SingleEmitter<FrequencyBandLevelModel> e) throws Exception {
-                equalizerModel.setBandLevel(bandNumber, level);
-                int currentBandLevel = equalizerModel.getBandLevel(bandNumber);
-                FrequencyBandLevelModel band =  new FrequencyBandLevelModel(bandNumber, currentBandLevel);
-                e.onSuccess(band);
-            }
-        });
+    public Observable<FrequencyBandLevelModel> controlFrequencyBandLevel(Observable<FrequencyBandLevelChangeEvent> bandEvents) {
+        return bandEvents
+                .flatMap(new Function<FrequencyBandLevelChangeEvent, ObservableSource<FrequencyBandLevelModel>>() {
+                    @Override
+                    public ObservableSource<FrequencyBandLevelModel> apply(@NonNull final FrequencyBandLevelChangeEvent frequencyBandLevelChangeEvent) throws Exception {
+                        return Observable.create(new ObservableOnSubscribe<FrequencyBandLevelModel>() {
+                            @Override
+                            public void subscribe(@NonNull ObservableEmitter<FrequencyBandLevelModel> e) throws Exception {
+                                int bandNumber = frequencyBandLevelChangeEvent.getBandNumber();
+                                int bandLevel = frequencyBandLevelChangeEvent.getUpdatedBandLevel();
+
+                                equalizerModel.setBandLevel(bandNumber, bandLevel);
+
+                                int currentBandLevel = equalizerModel.getBandLevel(bandNumber);
+                                FrequencyBandLevelModel band =  new FrequencyBandLevelModel(bandNumber, currentBandLevel);
+
+                                e.onNext(band);
+                            }
+                        });
+                    }
+                });
     }
+
 
     @Override
     public void initializeEqualizer(int priority, int audioSessionId) {
@@ -62,4 +82,5 @@ public class EqualizerInteractor implements IEqualizerInteractor {
     public void releaseEqualizer() {
         equalizerModel.release();
     }
+
 }

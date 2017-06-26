@@ -5,6 +5,9 @@ import java.util.List;
 
 import io.infernodz.equalizerapp.data.entities.FrequencyBand;
 import io.infernodz.equalizerapp.data.entities.FrequencyBandLevelModel;
+import io.infernodz.equalizerapp.ui.FrequencyBandLevelChangeEvent;
+import io.reactivex.Observable;
+import io.reactivex.Observer;
 import io.reactivex.Single;
 
 public interface IEqualizerInteractor {
@@ -17,7 +20,8 @@ public interface IEqualizerInteractor {
     /**
      * Sets the given equalizer band to the given gain value and returns this new value.
      */
-    Single<FrequencyBandLevelModel> updateFrequencyBandLevel(int bandNumber, int level);
+    Observable<FrequencyBandLevelModel> controlFrequencyBandLevel(
+            Observable<FrequencyBandLevelChangeEvent> bandEvents);
 
     /**
      * Initialize a new equalizer, attach it to audioSession and turns it on.
