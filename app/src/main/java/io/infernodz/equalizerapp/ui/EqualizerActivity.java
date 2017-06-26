@@ -42,6 +42,9 @@ public class EqualizerActivity extends AppCompatActivity
     private static final int MIN_SEEK_BAR_VALUE = 0;
     private static final int HERTZ_IN_KILOHERTZ = 1000;
 
+    private static final int BAND_LEVEL_CONTROLLER_WRAPPER_POSITION = 1;
+    private static final int BAND_LEVEL_TEXTVIEW_POSITION = 2;
+
     private static final String KILOHERTZ_SYMBOL = "kHz";
     private static final String HERTZ_SYMBOL = "Hz";
     private static final String DECIBEL_SYMBOL = "dB";
@@ -66,7 +69,6 @@ public class EqualizerActivity extends AppCompatActivity
         playerView = (SimpleExoPlayerView) findViewById(R.id.player);
         equalizerBandsWrapper = (LinearLayout) findViewById(R.id.bands_wrapper);
 
-        //presenter = new EqualizerPresenter(new EqualizerInteractor(new EqualizerModel()));
         EqualizerApplication.getAppComponent().inject(this);
         presenter.bindView(this);
         presenter.initializePlayer();
@@ -143,12 +145,12 @@ public class EqualizerActivity extends AppCompatActivity
 
             TextView bandFrequency = (TextView) bandRow.findViewById(R.id.band_frequency);
             TextView bandMinLevel = (TextView) bandRow.findViewById(R.id.band_min_level);
-            TextView bandMaxLevel = (TextView) bandRow.findViewById(R.id.band_max_level);
+            TextView bandLevel = (TextView) bandRow.findViewById(R.id.band_level);
             SeekBar bandLevelController = (SeekBar) bandRow.findViewById(R.id.band_level_controller);
 
             bandFrequency.setText(convertFrequencyToString(frequencyBand.getFrequency()));
             bandMinLevel.setText(convertBandLevelToString(frequencyBand.getMinLevel()));
-            bandMaxLevel.setText(convertBandLevelToString(frequencyBand.getMaxLevel()));
+            bandLevel.setText(convertBandLevelToString(frequencyBand.getLevel()));
 
             // Соотносим значения band с seek bar
             seekBarValueOffset = MIN_SEEK_BAR_VALUE - frequencyBand.getMinLevel();
@@ -178,6 +180,14 @@ public class EqualizerActivity extends AppCompatActivity
             });
             equalizerBandsWrapper.addView(bandRow);
         }
+    }
+
+    @Override
+    public void showBandLevel(int bandNumber, int bandLevel) {
+        LinearLayout bandRow = (LinearLayout) equalizerBandsWrapper.getChildAt(bandNumber);
+        LinearLayout bandLevelControllerWrapper = (LinearLayout) bandRow.getChildAt(BAND_LEVEL_CONTROLLER_WRAPPER_POSITION);
+        TextView bandLevelTextView = (TextView) bandLevelControllerWrapper.getChildAt(BAND_LEVEL_TEXTVIEW_POSITION);
+        bandLevelTextView.setText(convertBandLevelToString(bandLevel));
     }
 
     /* Private helper methods */

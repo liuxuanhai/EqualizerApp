@@ -35,7 +35,6 @@ public interface EqualizerContract {
         void createEqualizerControls();
 
         /**
-         *
          * @param bandNumber band where the action event occurred
          * @param level new gain level in decibels
          */
@@ -56,5 +55,7 @@ public interface EqualizerContract {
         void releasePlayer();
 
         void initializeFrequencyBandsUI(List<FrequencyBand> bands);
+
+        void showBandLevel(int bandNumber, int bandLevel);
     }
 }

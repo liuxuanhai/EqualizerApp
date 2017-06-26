@@ -9,7 +9,7 @@ import android.media.audiofx.Equalizer;
 public class EqualizerModel implements IEqualizerModel {
 
     private static final int MILIHERTZ_IN_HERTZ = 1000;
-    private static final int MILBELS_IN_DECIBEL = 100;
+    private static final int MILIBELS_IN_DECIBEL = 100;
 
     private Equalizer equalizer;
 
@@ -28,12 +28,12 @@ public class EqualizerModel implements IEqualizerModel {
 
     @Override
     public void setBandLevel(int band, int level) {
-        equalizer.setBandLevel((short) band, (short) (level * MILBELS_IN_DECIBEL));
+        equalizer.setBandLevel((short) band, (short) (level * MILIBELS_IN_DECIBEL));
     }
 
     @Override
     public int getBandLevel(int band) {
-        return equalizer.getBandLevel((short) band) / MILBELS_IN_DECIBEL;
+        return equalizer.getBandLevel((short) band) / MILIBELS_IN_DECIBEL;
     }
 
     @Override
@@ -48,12 +48,12 @@ public class EqualizerModel implements IEqualizerModel {
 
     @Override
     public int getMinBandLevel() {
-        return (int) equalizer.getBandLevelRange()[0] / MILBELS_IN_DECIBEL;
+        return (int) equalizer.getBandLevelRange()[0] / MILIBELS_IN_DECIBEL;
     }
 
     @Override
     public int getMaxBandLevel() {
-        return (int) equalizer.getBandLevelRange()[1] / MILBELS_IN_DECIBEL;
+        return (int) equalizer.getBandLevelRange()[1] / MILIBELS_IN_DECIBEL;
     }
 
 }

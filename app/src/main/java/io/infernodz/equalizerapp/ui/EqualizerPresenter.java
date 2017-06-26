@@ -8,9 +8,8 @@ import java.util.List;
 import io.infernodz.equalizerapp.data.entities.FrequencyBand;
 import io.infernodz.equalizerapp.data.entities.FrequencyBandLevelModel;
 import io.infernodz.equalizerapp.domain.IEqualizerInteractor;
-import io.reactivex.SingleObserver;
 import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
 
 public class EqualizerPresenter implements EqualizerContract.Presenter {
@@ -47,20 +46,10 @@ public class EqualizerPresenter implements EqualizerContract.Presenter {
         interactor.getFrequencyBands()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new SingleObserver<List<FrequencyBand>>() {
+                .subscribe(new Consumer<List<FrequencyBand>>() {
                     @Override
-                    public void onSubscribe(@NonNull Disposable d) {
-
-                    }
-
-                    @Override
-                    public void onSuccess(@NonNull List<FrequencyBand> frequencyBands) {
+                    public void accept(@NonNull List<FrequencyBand> frequencyBands) throws Exception {
                         view.initializeFrequencyBandsUI(frequencyBands);
-                    }
-
-                    @Override
-                    public void onError(@NonNull Throwable e) {
-
                     }
                 });
     }
@@ -70,20 +59,12 @@ public class EqualizerPresenter implements EqualizerContract.Presenter {
         interactor.updateFrequencyBandLevel(bandNumber, level)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new SingleObserver<FrequencyBandLevelModel>() {
+                .subscribe(new Consumer<FrequencyBandLevelModel>() {
                     @Override
-                    public void onSubscribe(@io.reactivex.annotations.NonNull Disposable d) {
-
-                    }
-
-                    @Override
-                    public void onSuccess(@io.reactivex.annotations.NonNull FrequencyBandLevelModel frequencyBandLevelModel) {
-
-                    }
-
-                    @Override
-                    public void onError(@io.reactivex.annotations.NonNull Throwable e) {
-
+                    public void accept(@NonNull FrequencyBandLevelModel frequencyBandLevelModel) throws Exception {
+                        int bandNumber = frequencyBandLevelModel.getBandNumber();
+                        int bandLevel = frequencyBandLevelModel.getCurrentBandLevel();
+                        view.showBandLevel(bandNumber, bandLevel);
                     }
                 });
     }
